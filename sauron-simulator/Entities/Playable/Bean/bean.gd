@@ -2,7 +2,7 @@ extends CharacterBody3D
 
 @export_group("Bean Custom Properties")
 @export var speed: float = 5.0
-@export var jump_velocity: float = 4.0
+@export var jump_velocity: float = 40.0
 @export var phantom_camera: PhantomCamera3D
 
 var _camera_yaw: float = 0
@@ -20,7 +20,7 @@ func _process(delta: float) -> void:
     pass
 
 func _physics_process(delta: float) -> void:
-    if self.is_on_floor():
+    if not is_on_floor():
         velocity += get_gravity() * delta
     if Input.is_action_just_pressed("ui_accept") and is_on_floor():
         velocity.y = jump_velocity
@@ -40,16 +40,29 @@ func _physics_process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     const sens: float = 0.01
-    const distanceSens: float = 0.5
+    const distance_sens: float = 0.5
 
     Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) else Input.MOUSE_MODE_VISIBLE 
-
-    if (Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and event is InputEventMouseMotion):
-        var input_event_: InputEventMouseMotion = event
-        _camera_yaw -= input_event_.relative.x * sens
-        _camera_pitch -= input_event_.relative.y * sens
+    
+    var input_event_mouse_mtn := event as InputEventMouseMotion
+    var input_event_mouse_btn := event as InputEventMouseButton
+    
+    if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and input_event_mouse_mtn:
+        _camera_yaw -= input_event_mouse_mtn.relative.x * sens
+        _camera_pitch -= input_event_mouse_mtn.relative.y * sens
         _camera_pitch = clamp(_camera_pitch, deg_to_rad(-50), deg_to_rad(60))
-        _update_camera_position()  
+        _update_camera_position() 
+    
+    if input_event_mouse_btn:
+        match input_event_mouse_btn.button_index:
+            MouseButton.MOUSE_BUTTON_WHEEL_UP:
+                _camera_distance -= distance_sens
+                _update_camera_position()
+            MouseButton.MOUSE_BUTTON_WHEEL_DOWN:
+                _camera_distance += distance_sens
+                _update_camera_position()
+        
+        
         
 func _update_camera_position() -> void:
     if not phantom_camera:
