@@ -1,6 +1,23 @@
-[gd_scene load_steps=5 format=3 uid="uid://ches2byutoh8g"]
+[gd_scene load_steps=15 format=3 uid="uid://ches2byutoh8g"]
 
 [ext_resource type="PackedScene" uid="uid://dh6n5k8f2hvw" path="res://Entities/Playable/Bean/bean.tscn" id="1_rwr3t"]
+[ext_resource type="Shader" uid="uid://cr0mnbphkv1k3" path="res://Common/Shaders/Pixelart/edge_detection.gdshader" id="2_e5ioc"]
+[ext_resource type="Script" uid="uid://bd046eokvcnu2" path="res://addons/phantom_camera/scripts/phantom_camera_host/phantom_camera_host.gd" id="3_o3vsh"]
+[ext_resource type="Script" uid="uid://csjccrhj5wnx7" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_3d.gd" id="4_f5ket"]
+[ext_resource type="Script" uid="uid://8umksf8e80fw" path="res://addons/phantom_camera/scripts/resources/tween_resource.gd" id="5_r6tmq"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_e5ioc"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_o3vsh"]
+sky_material = SubResource("ProceduralSkyMaterial_e5ioc")
+
+[sub_resource type="Environment" id="Environment_f5ket"]
+background_mode = 2
+sky = SubResource("Sky_o3vsh")
+tonemap_mode = 2
+glow_enabled = true
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_gbtji"]
 
@@ -12,7 +29,30 @@ lightmap_size_hint = Vector2i(502, 502)
 material = SubResource("StandardMaterial3D_kloop")
 size = Vector2(100, 100)
 
+[sub_resource type="QuadMesh" id="QuadMesh_75un2"]
+flip_faces = true
+size = Vector2(2, 2)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qr7cu"]
+render_priority = 0
+shader = ExtResource("2_e5ioc")
+shader_parameter/lightIntensity = 1.25
+shader_parameter/lineAlpha = 0.7
+shader_parameter/useLighting = false
+shader_parameter/lineHighlight = 0.2
+shader_parameter/lineShadow = 0.55
+
+[sub_resource type="Resource" id="Resource_8f62k"]
+script = ExtResource("5_r6tmq")
+
 [node name="DevPlayground" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_f5ket")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
 
 [node name="Floor" type="StaticBody3D" parent="."]
 
@@ -22,7 +62,44 @@ shape = SubResource("WorldBoundaryShape3D_gbtji")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
 mesh = SubResource("PlaneMesh_rwr3t")
 
-[node name="Bean" parent="." instance=ExtResource("1_rwr3t")]
+[node name="Bean" parent="." node_paths=PackedStringArray("phantom_camera") instance=ExtResource("1_rwr3t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8391762, 1, -5.027069)
 speed = 5.0
-jump_velocity = 4.0
+jump_velocity = 6.0
+phantom_camera = NodePath("../PhantomCamera3D")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+physics_interpolation_mode = 1
+transform = Transform3D(0.035793662, 0.31625015, -0.9480004, -1.4901161e-08, 0.9486082, 0.31645292, 0.9993592, -0.0113269985, 0.033954203, -7.329176, 5.01, -4.902069)
+projection = 1
+size = 28.536
+far = 4028.25
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Camera3D"]
+visible = false
+cast_shadow = 0
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_75un2")
+surface_material_override/0 = SubResource("ShaderMaterial_qr7cu")
+
+[node name="PhantomCameraHost" type="Node" parent="Camera3D"]
+process_priority = 300
+process_physics_priority = 300
+script = ExtResource("3_o3vsh")
+metadata/_custom_type_script = "uid://bd046eokvcnu2"
+
+[node name="PhantomCamera3D" type="Node3D" parent="." node_paths=PackedStringArray("follow_target", "look_at_target")]
+transform = Transform3D(0.035791997, 0.3162472, -0.9479782, -1.49004675e-08, 0.94859934, 0.31644553, 0.9993127, -0.011326892, 0.03395341, -7.329176, 5.01, -4.902069)
+top_level = true
+script = ExtResource("4_f5ket")
+follow_mode = 2
+follow_target = NodePath("../Bean")
+look_at_mode = 2
+look_at_target = NodePath("../Bean")
+tween_resource = SubResource("Resource_8f62k")
+follow_offset = Vector3(-3.49, 4.01, 0.125)
+look_at_offset = Vector3(0, 2.845, 0)
+align_transform_with_view = Callable()
+align_position_with_view = Callable()
+align_rotation_with_view = Callable()
+metadata/_custom_type_script = "uid://csjccrhj5wnx7"
