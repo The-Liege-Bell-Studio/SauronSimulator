@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://ches2byutoh8g"]
+
+[ext_resource type="PackedScene" uid="uid://dh6n5k8f2hvw" path="res://Entities/Playable/Bean/bean.tscn" id="1_rwr3t"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_gbtji"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kloop"]
+albedo_color = Color(0.90588236, 0.5882353, 0.2509804, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_rwr3t"]
+lightmap_size_hint = Vector2i(502, 502)
+material = SubResource("StandardMaterial3D_kloop")
+size = Vector2(100, 100)
+
+[node name="DevPlayground" type="Node3D"]
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("WorldBoundaryShape3D_gbtji")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("PlaneMesh_rwr3t")
+
+[node name="Bean" parent="." instance=ExtResource("1_rwr3t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8391762, 1, -5.027069)
+speed = 5.0
+jump_velocity = 4.0

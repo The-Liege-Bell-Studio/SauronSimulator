@@ -1,0 +1,96 @@
+[gd_scene load_steps=12 format=3 uid="uid://5e3olfyljvdw"]
+
+[ext_resource type="Shader" uid="uid://cr0mnbphkv1k3" path="res://Common/Shaders/Pixelart/edge_detection.gdshader" id="1_ydnlg"]
+[ext_resource type="Script" uid="uid://bd046eokvcnu2" path="res://addons/phantom_camera/scripts/phantom_camera_host/phantom_camera_host.gd" id="2_lxwdq"]
+[ext_resource type="Script" uid="uid://csjccrhj5wnx7" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_3d.gd" id="3_wn5dc"]
+[ext_resource type="Script" uid="uid://8umksf8e80fw" path="res://addons/phantom_camera/scripts/resources/tween_resource.gd" id="4_7xdq4"]
+[ext_resource type="PackedScene" uid="uid://ches2byutoh8g" path="res://Stages/DevPlayground/dev_playground.tscn" id="5_wn5dc"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_lxwdq"]
+flip_faces = true
+size = Vector2(2, 2)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wn5dc"]
+render_priority = 0
+shader = ExtResource("1_ydnlg")
+shader_parameter/lightIntensity = 1.25
+shader_parameter/lineAlpha = 0.7
+shader_parameter/useLighting = false
+shader_parameter/lineHighlight = 0.2
+shader_parameter/lineShadow = 0.55
+
+[sub_resource type="Resource" id="Resource_eiqoy"]
+script = ExtResource("4_7xdq4")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_wn5dc"]
+
+[sub_resource type="Sky" id="Sky_7xdq4"]
+sky_material = SubResource("ProceduralSkyMaterial_wn5dc")
+
+[sub_resource type="Environment" id="Environment_wn5dc"]
+background_mode = 2
+sky = SubResource("Sky_7xdq4")
+ambient_light_source = 3
+ambient_light_color = Color(0.86898494, 0.8689849, 0.8689849, 1)
+
+[node name="MainViewport" type="Node3D"]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+stretch_shrink = 2
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(576, 324)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="SubViewportContainer/SubViewport"]
+physics_interpolation_mode = 1
+transform = Transform3D(-0.041002274, 0.73883903, -0.6726334, -2.9802322e-08, 0.67319953, 0.7394609, 0.9991591, 0.030319512, -0.027602673, -15.475917, 7.705, -7.5153666)
+projection = 1
+size = 8.971
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Camera3D"]
+visible = false
+cast_shadow = 0
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_lxwdq")
+surface_material_override/0 = SubResource("ShaderMaterial_wn5dc")
+
+[node name="PhantomCameraHost" type="Node" parent="SubViewportContainer/SubViewport/Camera3D"]
+process_priority = 300
+process_physics_priority = 300
+script = ExtResource("2_lxwdq")
+metadata/_custom_type_script = "uid://bd046eokvcnu2"
+
+[node name="PhantomCamera3D" type="Node3D" parent="SubViewportContainer/SubViewport" node_paths=PackedStringArray("follow_target", "look_at_target")]
+transform = Transform3D(-0.04100082, 0.7388374, -0.6726181, -2.9801267e-08, 0.6731981, 0.7394441, 0.9991237, 0.030319447, -0.027602045, -15.475917, 7.705, -7.5153666)
+top_level = true
+script = ExtResource("3_wn5dc")
+follow_mode = 2
+follow_target = NodePath("../DevPlayground/Bean")
+look_at_mode = 2
+look_at_target = NodePath("../DevPlayground/Bean")
+tween_resource = SubResource("Resource_eiqoy")
+follow_offset = Vector3(-4.63, 6.705, -0.19)
+look_at_offset = Vector3(0, 1.615, 0)
+align_transform_with_view = Callable()
+align_position_with_view = Callable()
+align_rotation_with_view = Callable()
+metadata/_custom_type_script = "uid://csjccrhj5wnx7"
+
+[node name="DevPlayground" parent="SubViewportContainer/SubViewport" instance=ExtResource("5_wn5dc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.00674, 0, -2.2982974)
+
+[node name="Bean" parent="SubViewportContainer/SubViewport/DevPlayground" index="1" node_paths=PackedStringArray("phantom_camera")]
+phantom_camera = NodePath("../../PhantomCamera3D")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewportContainer/SubViewport/DevPlayground"]
+environment = SubResource("Environment_wn5dc")
+
+[editable path="SubViewportContainer/SubViewport/DevPlayground"]

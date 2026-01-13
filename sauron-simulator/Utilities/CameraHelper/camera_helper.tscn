@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bitp5kl2fwhs8"]
+
+[ext_resource type="Script" uid="uid://b06wxwxkwtv6" path="res://Utilities/CameraHelper/camera_helper.gd" id="1_x8jpb"]
+
+[node name="CameraHelper" type="Node3D"]
+script = ExtResource("1_x8jpb")

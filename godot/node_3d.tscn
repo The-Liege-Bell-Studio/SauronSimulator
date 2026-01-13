@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://b881fkjyo6uto"]
-
-[ext_resource type="PackedScene" uid="uid://cs6autc4dl6pu" path="res://blender/first_character_model.blend" id="1_a202f"]
-
-[node name="Node3D" type="Node3D"]
-
-[node name="first_character_model" parent="." instance=ExtResource("1_a202f")]
