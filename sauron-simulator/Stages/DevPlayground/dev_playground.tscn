@@ -43,10 +43,13 @@ size = Vector2(2, 2)
 render_priority = 0
 shader = ExtResource("2_e5ioc")
 shader_parameter/lightIntensity = 1.25
-shader_parameter/lineAlpha = 0.7
-shader_parameter/useLighting = false
+shader_parameter/lineAlpha = 0.475
+shader_parameter/useLighting = true
 shader_parameter/lineHighlight = 0.2
 shader_parameter/lineShadow = 0.55
+shader_parameter/outline_color = Color(0, 0, 0, 1)
+shader_parameter/depth_threshold = 0.155
+shader_parameter/normal_threshold = 2.575
 
 [sub_resource type="Resource" id="Resource_8f62k"]
 script = ExtResource("5_r6tmq")
@@ -74,6 +77,12 @@ speed = 5.0
 jump_velocity = 6.0
 phantom_camera = NodePath("../PhantomCamera3D")
 
+[node name="OmniLight3D" type="OmniLight3D" parent="Bean"]
+transform = Transform3D(0.03579367, 0.3162501, -0.9480004, -1.5491999e-08, 0.9486082, 0.31645286, 0.9993592, -0.011326995, 0.033954173, 2.5741725, 2.341783, -4.1429462)
+light_color = Color(0.20392157, 1, 1, 1)
+omni_range = 10.65
+omni_attenuation = -0.061
+
 [node name="Camera3D" type="Camera3D" parent="."]
 physics_interpolation_mode = 1
 transform = Transform3D(0.035793662, 0.3162501, -0.9480004, -1.4901161e-08, 0.9486082, 0.31645286, 0.9993592, -0.011327013, 0.033954203, 3.0311186, 5.01, 0.035951138)
@@ -82,7 +91,6 @@ size = 28.536
 far = 4028.25
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Camera3D"]
-visible = false
 cast_shadow = 0
 extra_cull_margin = 16384.0
 mesh = SubResource("QuadMesh_75un2")
