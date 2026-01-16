@@ -7,7 +7,7 @@
 ;   param=value ; assign values to parameters
 
 config_version=5
-
+; Eu adicionei essa linha
 [application]
 
 config/name="SauronSimulator"
