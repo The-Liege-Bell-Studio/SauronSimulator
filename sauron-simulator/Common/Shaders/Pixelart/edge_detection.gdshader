@@ -10,9 +10,14 @@ uniform float lineAlpha = 0.7;
 uniform bool useLighting = true;
 uniform float lineHighlight = 0.2;
 uniform float lineShadow = 0.55;
+uniform vec4 outline_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform float depth_threshold = 0.05;
+uniform float normal_threshold = 0.5;
 
 varying vec2 screenUV;
 varying float lineMask;
+
+
 
 
 float GetLinearDepth(vec2 sUV, sampler2D depthTexture, mat4 invProjectionMat, float mask){
@@ -44,55 +49,39 @@ void vertex(){
 }
 
 void fragment() {
-	vec2 texelSize = 1.0 / VIEWPORT_SIZE.xy;
-	screenUV = SCREEN_UV;
+	vec2 texelSize = (1.0 / VIEWPORT_SIZE.xy);
+    vec3 screen_color = texture(SCREEN_TEXTURE, SCREEN_UV).rgb;
+    
+    float outlineMask = ceil(texture(NORMAL_TEXTURE, SCREEN_UV).a);
 
-	// UV offsets
-	vec2 UVOffsets[4];
-	UVOffsets[0] = SCREEN_UV + vec2(0.0, -1.0) * texelSize;
-	UVOffsets[1] = SCREEN_UV + vec2(0.0, 1.0) * texelSize;
-	UVOffsets[2] = SCREEN_UV + vec2(1.0, 0.0) * texelSize;
-	UVOffsets[3] = SCREEN_UV + vec2(-1.0, 0.0) * texelSize;
-
-	// Using alpha channel (screen roughness) to mask objects to not receive outlines
-	float outlineMask = texture(NORMAL_TEXTURE, SCREEN_UV).a;
-	outlineMask = ceil(outlineMask); // Objects with Roughness = 0 will not have and outline
-
-	// Edge detection with Depth
-	float depthDifference = 0.0;
-	float invDepthDifference = 0.5;
-	float depth = GetLinearDepth(SCREEN_UV, DEPTH_TEXTURE, INV_PROJECTION_MATRIX, outlineMask);
-
-	for (int i = 0; i < UVOffsets.length(); i++){
-		float dOff = GetLinearDepth(UVOffsets[i],DEPTH_TEXTURE, INV_PROJECTION_MATRIX, outlineMask);
-		depthDifference += clamp(dOff - depth, 0.0, 1.0);
-		invDepthDifference += depth - dOff;
-	}
-	invDepthDifference = clamp(invDepthDifference, 0.0, 1.0);
-	invDepthDifference = clamp(smoothstep(0.9, 0.9, invDepthDifference) * 10.0 , 0.0, 1.0);
-	depthDifference = smoothstep(0.25, 0.3, depthDifference);
-
-	// Edge detection with Normals
-	float normalDifference = 0.;
-	vec3 normalEdgeBias = vec3(1.0, 1.0, 1.0);
-	vec3 normal = GetNormal(SCREEN_UV, NORMAL_TEXTURE, outlineMask);
-
-	for (int i = 0; i < UVOffsets.length(); i++){
-		vec3 nOff = GetNormal(UVOffsets[i],NORMAL_TEXTURE, outlineMask);
-		normalDifference += NormalEdgeIndicator(normalEdgeBias, normal, nOff, depthDifference);
-	}
-	normalDifference = smoothstep(0.2, 0.2, normalDifference);
-	normalDifference = clamp(normalDifference - invDepthDifference, 0.0, 1.0);
-
-
-	ALBEDO = texture(SCREEN_TEXTURE, SCREEN_UV).rgb;
-	lineMask = clamp(0.1, lineAlpha, (depthDifference + normalDifference * 1.0));
-
-
-	if (!useLighting){
-		ALBEDO += clamp((normalDifference - depthDifference), 0.0, 1.0) * lineHighlight;
-		ALBEDO -= ALBEDO * depthDifference * lineShadow;
-	}
+    // Optimized 4-tap sampling
+    float d = GetLinearDepth(SCREEN_UV, DEPTH_TEXTURE, INV_PROJECTION_MATRIX, 1.0);
+    vec3 n = GetNormal(SCREEN_UV, NORMAL_TEXTURE, 1.0);
+    
+    float edge = 0.0;
+    
+    // Sample neighbors
+    vec2 offsets[4] = { vec2(0,1), vec2(0,-1), vec2(1,0), vec2(-1,0) };
+    
+    for(int i = 0; i < 4; i++) {
+        vec2 neighbor_uv = SCREEN_UV + offsets[i] * texelSize;
+        
+        // Depth Edge
+        float dn = GetLinearDepth(neighbor_uv, DEPTH_TEXTURE, INV_PROJECTION_MATRIX, 1.0);
+        float d_diff = abs(d - dn);
+        edge += step(depth_threshold, d_diff);
+        
+        // Normal Edge
+        vec3 nn = GetNormal(neighbor_uv, NORMAL_TEXTURE, 1.0);
+        float n_diff = 1.0 - dot(n, nn);
+        edge += step(normal_threshold, n_diff);
+    }
+    
+    edge = clamp(edge * outlineMask, 0.0, 1.0);
+    
+    // Mix the original screen with the outline color based on the edge strength
+    vec3 final_color = mix(screen_color, outline_color.rgb, edge * lineAlpha);
+    ALBEDO = final_color;
 }
 
 void light (){
